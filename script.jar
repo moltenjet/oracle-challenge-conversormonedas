@@ -1,0 +1,135 @@
+// Importaciones necesarias para trabajar con JSON, solicitudes HTTP y la manipulación de fechas
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;  // Gson, versión 2.10.1 o superior
+import java.net.URI;
+import java.net.http.HttpClient;   // Utilización de HttpClient para solicitudes HTTP
+import java.net.http.HttpRequest; // Utilización de HttpRequest para configurar solicitudes
+import java.net.http.HttpResponse; // Utilización de HttpResponse para gestionar las respuestas HTTP
+import java.time.LocalDateTime;    // Biblioteca java.time para manejar el tiempo
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
+
+public class CurrencyConverter {
+    // URL de la API para obtener tasas de cambio. Aquí se asume una API pública, puede requerir una clave en producción.
+    private static final String API_URL = "https://api.exchangerate-api.com/v4/latest/USD"; 
+    private static final HttpClient client = HttpClient.newHttpClient(); // Crear instancia de HttpClient
+    
+    // Mapa para almacenar las monedas y su descripción
+    private static final Map<String, String> currencyMap = new HashMap<>();
+    // Mapa para almacenar las tasas de cambio obtenidas de la API
+    private static final Map<String, Double> exchangeRates = new HashMap<>();
+    // Lista de monedas soportadas, se pueden ampliar más adelante
+    private static final String[] supportedCurrencies = {"ARS", "BOB", "BRL", "CLP", "COP", "USD"};
+    // Historial para almacenar las conversiones realizadas
+    private static final StringBuilder history = new StringBuilder();
+
+    public static void main(String[] args) throws Exception {
+        populateCurrencyMap(); // Inicializa los códigos de moneda
+        fetchExchangeRates();   // Obtiene las tasas de cambio de la API
+        runConverter();         // Ejecuta el conversor en consola
+    }
+
+    // Poblar el mapa con los códigos de moneda y sus nombres correspondientes
+    private static void populateCurrencyMap() {
+        currencyMap.put("ARS", "Peso argentino");
+        currencyMap.put("BOB", "Boliviano");
+        currencyMap.put("BRL", "Real brasileño");
+        currencyMap.put("CLP", "Peso chileno");
+        currencyMap.put("COP", "Peso colombiano");
+        currencyMap.put("USD", "Dólar estadounidense");
+    }
+
+    // Realizar solicitud HTTP usando HttpClient y HttpRequest, recibir la respuesta con HttpResponse y manejarla
+    private static void fetchExchangeRates() throws Exception {
+        // Crear la solicitud a la API con HttpRequest
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(API_URL)) // URL proporcionada por la API
+                .GET()
+                .build();
+
+        // Enviar la solicitud y manejar la respuesta usando HttpResponse
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        // Analizar el JSON recibido usando Gson (JsonParser y JsonObject)
+        JsonObject jsonObject = JsonParser.parseString(response.body()).getAsJsonObject();
+        JsonObject rates = jsonObject.getAsJsonObject("rates");
+
+        // Filtrar las monedas soportadas en la aplicación y guardarlas en el mapa exchangeRates
+        for (String currency : supportedCurrencies) {
+            exchangeRates.put(currency, rates.get(currency).getAsDouble());
+        }
+    }
+
+    // Método principal que implementa una interfaz de consola con un menú
+    private static void runConverter() {
+        Scanner scanner = new Scanner(System.in); // Usamos Scanner para capturar la entrada del usuario (Instrucción 10)
+        boolean keepRunning = true;
+
+        while (keepRunning) {
+            // Mostrar el menú de opciones al usuario
+            System.out.println("=== Conversor de Monedas ===");
+            System.out.println("1. Convertir monedas");
+            System.out.println("2. Ver historial");
+            System.out.println("3. Salir");
+            System.out.print("Elija una opción: ");
+            int option = scanner.nextInt();
+
+            // Opción seleccionada por el usuario
+            switch (option) {
+                case 1 -> convertCurrency(scanner);  // Realizar conversión de monedas (Instrucción 9)
+                case 2 -> showHistory();             // Mostrar el historial de conversiones (Instrucción 11)
+                case 3 -> keepRunning = false;       // Salir del programa
+                default -> System.out.println("Opción inválida. Intente de nuevo.");
+            }
+        }
+
+        System.out.println("Gracias por usar el Conversor de Monedas.");
+    }
+
+    // Convertir monedas y mostrar el resultado usando las tasas obtenidas de la API
+    private static void convertCurrency(Scanner scanner) {
+        // Mostrar las monedas disponibles
+        System.out.println("Monedas disponibles:");
+        for (String currency : supportedCurrencies) {
+            System.out.println(currency + " - " + currencyMap.get(currency));
+        }
+
+        // Capturar la entrada del usuario para las monedas y el monto a convertir
+        System.out.print("Ingrese la moneda de origen (Código): ");
+        String fromCurrency = scanner.next().toUpperCase();
+        System.out.print("Ingrese la moneda de destino (Código): ");
+        String toCurrency = scanner.next().toUpperCase();
+        System.out.print("Ingrese la cantidad a convertir: ");
+        double amount = scanner.nextDouble();
+
+        // Validar si las monedas están soportadas
+        if (!exchangeRates.containsKey(fromCurrency) || !exchangeRates.containsKey(toCurrency)) {
+            System.out.println("Moneda no soportada.");
+            return;
+        }
+
+        // Obtener las tasas de conversión y calcular el valor convertido
+        double fromRate = exchangeRates.get(fromCurrency);
+        double toRate = exchangeRates.get(toCurrency);
+        double convertedAmount = (amount / fromRate) * toRate;
+
+        // Mostrar el resultado de la conversión
+        System.out.printf("Resultado: %.2f %s = %.2f %s%n", amount, fromCurrency, convertedAmount, toCurrency);
+
+        // Guardar la conversión en el historial
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        history.append(String.format("[%s] %.2f %s -> %.2f %s%n", timestamp, amount, fromCurrency, convertedAmount, toCurrency));
+    }
+
+    // Mostrar el historial de conversiones realizadas
+    private static void showHistory() {
+        if (history.length() == 0) {
+            System.out.println("No se han realizado conversiones.");
+        } else {
+            System.out.println("=== Historial de Conversiones ===");
+            System.out.println(history);
+        }
+    }
+}
