@@ -19,8 +19,7 @@ Requisitos Previos
 
 
 Instrucciones
-    1. Importar la Biblioteca Gson en IntelliJ
-        Para utilizar Gson en el análisis de JSON, necesitarás importar la biblioteca Gson en tu proyecto de IntelliJ. Puedes hacerlo agregando la siguiente dependencia en tu archivo pom.xml (si utilizas Maven):
+1. Importar la Biblioteca Gson en IntelliJ. Para utilizar Gson en el análisis de JSON, necesitarás importar la biblioteca Gson en tu proyecto de IntelliJ. Puedes hacerlo agregando la siguiente dependencia en tu archivo pom.xml (si utilizas Maven):
 
         <dependency>
             <groupId>com.google.code.gson</groupId>
@@ -29,13 +28,13 @@ Instrucciones
         </dependency>
         Si no usas Maven, descarga el archivo JAR de Gson y añádelo manualmente a tu proyecto.
 
-    2. Configuración y Ejecución
+2. Configuración y Ejecución
         Clona el repositorio o copia los archivos fuente a tu entorno local.
         Asegúrate de haber importado la biblioteca Gson y que Java JDK 11+ esté configurado correctamente.
         Compila y ejecuta el archivo CurrencyConverter.java.
         El programa obtendrá automáticamente las tasas de cambio de la API y cargará las monedas soportadas en la aplicación.
     
-    3. Usar la Aplicación
+3. Usar la Aplicación
         Al ejecutar el programa, verás el menú principal:
         Opción 1: Convertir entre monedas.
         Opción 2: Ver el historial de conversiones pasadas.
@@ -46,7 +45,7 @@ Instrucciones
         Ver historial:
         Puedes ver las conversiones anteriores junto con la fecha y hora en que se realizaron.
     
-    4. Modificar las Monedas Soportadas
+4. Modificar las Monedas Soportadas
         Para agregar o modificar las monedas que soporta el conversor:
         Abre el archivo CurrencyConverter.java.
         Modifica el array supportedCurrencies para incluir los códigos de moneda adicionales.
